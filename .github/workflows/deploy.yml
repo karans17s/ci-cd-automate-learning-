@@ -1,0 +1,38 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Create Resource Group
+      run: |
+        az group create --name myRG --location eastus
+
+    - name: Deploy Bicep
+      run: |
+        az deployment group create \
+          --resource-group myRG \
+          --template-file main.bicep \
+          --parameters parameters.json
+
+    - name: Get Deployment Output
+      run: |
+        az deployment group show \
+          --resource-group myRG \
+          --name main \
+          --query properties.outputs
